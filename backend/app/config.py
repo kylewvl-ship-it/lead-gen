@@ -17,6 +17,10 @@ class Settings:
     # API usage limits (to stay within free tier)
     MONTHLY_API_LIMIT: int = int(os.getenv("MONTHLY_API_LIMIT", "500"))
     
+    # Firecrawl API
+    FIRECRAWL_API_KEY: str = os.getenv("FIRECRAWL_API_KEY", "")
+    FIRECRAWL_MONTHLY_LIMIT: int = int(os.getenv("FIRECRAWL_MONTHLY_LIMIT", "400"))
+    
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./leads.db")
     
@@ -25,6 +29,8 @@ class Settings:
         errors = []
         if not self.GOOGLE_MAPS_API_KEY:
             errors.append("GOOGLE_MAPS_API_KEY is not set")
+        if not self.FIRECRAWL_API_KEY:
+            errors.append("FIRECRAWL_API_KEY is not set (company research/SEO disabled)")
         return errors
 
 

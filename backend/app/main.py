@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
 from app.config import settings
-from app.routers import search, businesses
+from app.routers import search, businesses, research, seo
 
 
 @asynccontextmanager
@@ -66,6 +66,8 @@ app.add_middleware(
 # Include routers
 app.include_router(search.router)
 app.include_router(businesses.router)
+app.include_router(research.router)
+app.include_router(seo.router)
 
 # Serve frontend static files
 frontend_path = Path(__file__).parent.parent.parent / "frontend"

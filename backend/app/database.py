@@ -109,6 +109,105 @@ class APIUsage(Base):
     last_updated = Column(DateTime, default=datetime.utcnow)
 
 
+class FirecrawlUsage(Base):
+    """Track Firecrawl API usage to stay within free tier."""
+    __tablename__ = "firecrawl_usage"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    month = Column(String, nullable=False)  # Format: "2024-01"
+    credit_count = Column(Integer, default=0)
+    last_updated = Column(DateTime, default=datetime.utcnow)
+
+
+class CompanyResearch(Base):
+    """Store company research data from Firecrawl."""
+    __tablename__ = "company_research"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, index=True)  # Links to Business.id
+    scraped_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Basic info
+    page_title = Column(String)
+    meta_description = Column(Text)
+    
+    # Contact info
+    emails = Column(Text)  # JSON array
+    phones = Column(Text)  # JSON array
+    
+    # Social media
+    social_links = Column(Text)  # JSON object
+    
+    # Technical
+    technologies = Column(Text)  # JSON array
+    
+    # Raw content (for future analysis)
+    raw_markdown = Column(Text)
+    
+    def to_dict(self):
+        """Convert to dictionary for JSON response."""
+        return {
+            "id": self.id,
+            "business_id": self.business_id,
+            "scraped_at": self.scraped_at.isoformat() if self.scraped_at else None,
+            "page_title": self.page_title,
+            "meta_description": self.meta_description,
+            "emails": json.loads(self.emails) if self.emails else [],
+            "phones": json.loads(self.phones) if self.phones else [],
+            "social_links": json.loads(self.social_links) if self.social_links else {},
+            "technologies": json.loads(self.technologies) if self.technologies else [],
+        }
+
+
+class SEOAnalysis(Base):
+    """Store SEO analysis results."""
+    __tablename__ = "seo_analyses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, index=True)  # Links to Business.id
+    analyzed_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Scores (0-100)
+    overall_score = Column(Float)
+    title_score = Column(Float)
+    meta_score = Column(Float)
+    heading_score = Column(Float)
+    content_score = Column(Float)
+    image_score = Column(Float)
+    link_score = Column(Float)
+    technical_score = Column(Float)
+    
+    # Grade (A+, A, B, C, D, F)
+    grade = Column(String(2))
+    
+    # Detailed data
+    metrics = Column(Text)  # JSON object
+    issues = Column(Text)  # JSON array
+    recommendations = Column(Text)  # JSON array
+    
+    def to_dict(self):
+        """Convert to dictionary for JSON response."""
+        return {
+            "id": self.id,
+            "business_id": self.business_id,
+            "analyzed_at": self.analyzed_at.isoformat() if self.analyzed_at else None,
+            "overall_score": self.overall_score,
+            "grade": self.grade,
+            "scores": {
+                "title": self.title_score,
+                "meta": self.meta_score,
+                "headings": self.heading_score,
+                "content": self.content_score,
+                "images": self.image_score,
+                "links": self.link_score,
+                "technical": self.technical_score,
+            },
+            "metrics": json.loads(self.metrics) if self.metrics else {},
+            "issues": json.loads(self.issues) if self.issues else [],
+            "recommendations": json.loads(self.recommendations) if self.recommendations else [],
+        }
+
+
 def init_db():
     """Create all tables."""
     Base.metadata.create_all(bind=engine)
