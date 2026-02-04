@@ -79,5 +79,84 @@ const api = {
     async healthCheck() {
         const response = await fetch(`${API_BASE}/health`);
         return response.json();
+    },
+
+    // ======== Company Research ========
+
+    /**
+     * Run company research on a business
+     */
+    async runCompanyResearch(businessId) {
+        const response = await fetch(`${API_BASE}/research/${businessId}`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Research failed');
+        }
+        return response.json();
+    },
+
+    /**
+     * Get stored company research
+     */
+    async getCompanyResearch(businessId) {
+        const response = await fetch(`${API_BASE}/research/${businessId}`);
+        if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error('Failed to get research');
+        }
+        return response.json();
+    },
+
+    /**
+     * Get Firecrawl usage stats
+     */
+    async getFirecrawlUsage() {
+        const response = await fetch(`${API_BASE}/research/usage`);
+        if (!response.ok) {
+            throw new Error('Failed to get Firecrawl usage');
+        }
+        return response.json();
+    },
+
+    // ======== SEO Analysis ========
+
+    /**
+     * Run SEO analysis on a business
+     */
+    async runSeoAnalysis(businessId) {
+        const response = await fetch(`${API_BASE}/seo/analyze/${businessId}`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'SEO analysis failed');
+        }
+        return response.json();
+    },
+
+    /**
+     * Get stored SEO analysis
+     */
+    async getSeoAnalysis(businessId) {
+        const response = await fetch(`${API_BASE}/seo/${businessId}`);
+        if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error('Failed to get SEO analysis');
+        }
+        return response.json();
+    },
+
+    /**
+     * Get SEO issues for a business
+     */
+    async getSeoIssues(businessId) {
+        const response = await fetch(`${API_BASE}/seo/issues/${businessId}`);
+        if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error('Failed to get SEO issues');
+        }
+        return response.json();
     }
 };

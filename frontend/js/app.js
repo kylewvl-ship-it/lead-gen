@@ -258,6 +258,16 @@ function renderTable(businesses) {
             <td>
                 ${b.address ? escapeHtml(b.address) : '-'}
             </td>
+            <td class="actions-cell">
+                ${b.website ? `
+                    <button class="btn-action btn-research" onclick="openResearch(${b.id}, '${escapeHtml(b.name).replace(/'/g, "\\'")}')">
+                        🔍 Research
+                    </button>
+                    <button class="btn-action btn-seo" onclick="openSeoAnalysis(${b.id}, '${escapeHtml(b.name).replace(/'/g, "\\'")}')">
+                        📊 SEO
+                    </button>
+                ` : '<span class="text-muted">N/A</span>'}
+            </td>
         </tr>
     `).join('');
 }
@@ -356,3 +366,226 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// ======== Modal Functions ========
+
+/**
+ * Close modal
+ */
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+/**
+ * Open company research modal
+ */
+async function openResearch(businessId, businessName) {
+    const modal = document.getElementById('researchModal');
+    const content = document.getElementById('researchContent');
+
+    modal.style.display = 'flex';
+    content.innerHTML = `
+        <div class="modal-loading">
+            <div class="spinner"></div>
+            <p>Researching ${businessName}...</p>
+            <p class="text-muted">This may take a few seconds</p>
+        </div>
+    `;
+
+    try {
+        // Run research
+        const result = await api.runCompanyResearch(businessId);
+        const research = result.research;
+
+        content.innerHTML = `
+            <div class="research-results">
+                <div class="research-header">
+                    <h4>${escapeHtml(result.business_name)}</h4>
+                    <a href="${escapeHtml(result.website)}" target="_blank" class="website-link">
+                        🔗 ${escapeHtml(result.website)}
+                    </a>
+                </div>
+                
+                <div class="research-section">
+                    <h5>📝 Page Info</h5>
+                    <p><strong>Title:</strong> ${escapeHtml(research.page_title) || 'N/A'}</p>
+                    <p><strong>Description:</strong> ${escapeHtml(research.meta_description) || 'N/A'}</p>
+                </div>
+                
+                ${research.emails && research.emails.length > 0 ? `
+                <div class="research-section">
+                    <h5>📧 Contact Emails</h5>
+                    <ul class="contact-list">
+                        ${research.emails.map(e => `<li><a href="mailto:${e}">${e}</a></li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${research.phones && research.phones.length > 0 ? `
+                <div class="research-section">
+                    <h5>📞 Phone Numbers</h5>
+                    <ul class="contact-list">
+                        ${research.phones.map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${Object.keys(research.social_links || {}).length > 0 ? `
+                <div class="research-section">
+                    <h5>🌐 Social Media</h5>
+                    <div class="social-links">
+                        ${Object.entries(research.social_links).map(([platform, url]) => `
+                            <a href="${escapeHtml(url)}" target="_blank" class="social-badge ${platform}">
+                                ${platform}
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${research.technologies && research.technologies.length > 0 ? `
+                <div class="research-section">
+                    <h5>⚙️ Technologies Detected</h5>
+                    <div class="tech-badges">
+                        ${research.technologies.map(t => `<span class="tech-badge">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="research-footer">
+                    <small>Scraped: ${new Date(research.scraped_at).toLocaleString()}</small>
+                    <small>Firecrawl Usage: ${result.usage?.credits_used || 0}/${result.usage?.credits_limit || 400}</small>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        content.innerHTML = `
+            <div class="modal-error">
+                <div class="error-icon">⚠️</div>
+                <h4>Research Failed</h4>
+                <p>${escapeHtml(error.message)}</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Open SEO analysis modal
+ */
+async function openSeoAnalysis(businessId, businessName) {
+    const modal = document.getElementById('seoModal');
+    const content = document.getElementById('seoContent');
+
+    modal.style.display = 'flex';
+    content.innerHTML = `
+        <div class="modal-loading">
+            <div class="spinner"></div>
+            <p>Analyzing ${businessName}...</p>
+            <p class="text-muted">Running comprehensive SEO audit</p>
+        </div>
+    `;
+
+    try {
+        // Run SEO analysis
+        const result = await api.runSeoAnalysis(businessId);
+        const analysis = result.analysis;
+
+        content.innerHTML = `
+            <div class="seo-results">
+                <div class="seo-header">
+                    <div class="seo-score-circle ${getGradeClass(analysis.grade)}">
+                        <span class="score-value">${Math.round(analysis.overall_score)}</span>
+                        <span class="score-grade">${analysis.grade}</span>
+                    </div>
+                    <div class="seo-summary">
+                        <h4>${escapeHtml(result.business_name)}</h4>
+                        <p>${escapeHtml(result.website)}</p>
+                    </div>
+                </div>
+                
+                <div class="seo-scores-grid">
+                    ${Object.entries(analysis.scores).map(([key, value]) => `
+                        <div class="score-item">
+                            <div class="score-bar">
+                                <div class="score-fill ${getScoreColorClass(value)}" style="width: ${value}%"></div>
+                            </div>
+                            <span class="score-label">${formatScoreLabel(key)}</span>
+                            <span class="score-value-small">${Math.round(value)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${analysis.issues && analysis.issues.length > 0 ? `
+                <div class="seo-section">
+                    <h5>🚨 Issues Found (${analysis.issues.length})</h5>
+                    <div class="issues-list">
+                        ${analysis.issues.slice(0, 10).map(issue => `
+                            <div class="issue-item severity-${issue.severity}">
+                                <span class="issue-badge ${issue.severity}">${issue.severity}</span>
+                                <div class="issue-content">
+                                    <strong>${escapeHtml(issue.message)}</strong>
+                                    <p>${escapeHtml(issue.impact)}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : '<div class="seo-section success"><h5>✅ No major issues found!</h5></div>'}
+                
+                ${analysis.recommendations && analysis.recommendations.length > 0 ? `
+                <div class="seo-section">
+                    <h5>💡 Recommendations</h5>
+                    <ul class="recommendations-list">
+                        ${analysis.recommendations.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div class="seo-footer">
+                    <small>Analyzed: ${new Date(analysis.analyzed_at).toLocaleString()}</small>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        content.innerHTML = `
+            <div class="modal-error">
+                <div class="error-icon">⚠️</div>
+                <h4>SEO Analysis Failed</h4>
+                <p>${escapeHtml(error.message)}</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Get CSS class for SEO grade
+ */
+function getGradeClass(grade) {
+    if (grade.startsWith('A')) return 'grade-a';
+    if (grade === 'B') return 'grade-b';
+    if (grade === 'C') return 'grade-c';
+    return 'grade-d';
+}
+
+/**
+ * Get CSS class for score color
+ */
+function getScoreColorClass(score) {
+    if (score >= 80) return 'score-good';
+    if (score >= 50) return 'score-medium';
+    return 'score-bad';
+}
+
+/**
+ * Format score label for display
+ */
+function formatScoreLabel(key) {
+    return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.style.display = 'none';
+    }
+});

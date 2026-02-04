@@ -112,6 +112,7 @@
                                 <th>Website</th>
                                 <th>Phone</th>
                                 <th>Address</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="resultsBody">
@@ -135,10 +136,36 @@
                 <p id="errorMessage"></p>
             </section>
         </main>
+
+        <!-- Research Modal -->
+        <div class="modal-overlay" id="researchModal" style="display:none;">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">🔍 Company Research</h3>
+                    <button class="modal-close" onclick="closeModal('researchModal')">&times;</button>
+                </div>
+                <div class="modal-body" id="researchContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SEO Modal -->
+        <div class="modal-overlay" id="seoModal" style="display:none;">
+            <div class="modal modal-lg">
+                <div class="modal-header">
+                    <h3 class="modal-title">📊 SEO Analysis</h3>
+                    <button class="modal-close" onclick="closeModal('seoModal')">&times;</button>
+                </div>
+                <div class="modal-body" id="seoContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/api.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
 </body>
 
 </html>

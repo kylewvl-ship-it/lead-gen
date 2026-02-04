@@ -14,3 +14,10 @@ httpx==0.26.0
 
 # CORS for frontend
 python-multipart==0.0.6
+
+# Firecrawl for web scraping and company research
+firecrawl-py==1.5.0
+
+# HTML parsing for SEO analysis
+beautifulsoup4==4.12.3
+lxml==5.1.0
